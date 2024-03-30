@@ -15,7 +15,7 @@ $ Spider dataset = "https://drive.google.com/uc?export=download&id=1TqleXec_OykO
 
 
 ## setup
-To run this project, use the following commands:
+To run this project, first change your api_key and base_url in DIN-SQL.py, then use the following commands:
 
 ```
 $ pip3 install -r requirements.txt

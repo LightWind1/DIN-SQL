@@ -1,6 +1,6 @@
 import pandas as pd
 import time
-import openai
+from openai import OpenAI
 import os
 import sys
 
@@ -441,9 +441,8 @@ if sys.argv[1] == "--dataset" and sys.argv[3] == "--output":
 else:
     raise Exception("Please use this format python CoT.py --dataset data/ --output predicted_sql.txt")
 
-API_KEY = #key
-os.environ["OPENAI_API_KEY"] = API_KEY
-openai.api_key = os.getenv("OPENAI_API_KEY")
+API_KEY = ""#key
+BASE_URL = "https://api.openai.com/v1/chat/completions" #base_url
 
 
 def load_data(DATASET):
@@ -570,7 +569,11 @@ def debuger(test_sample_text,database,sql):
   prompt = instruction + fields+ '#### Question: ' + test_sample_text + '\n#### SQLite SQL QUERY\n' + sql +'\n#### SQLite FIXED SQL QUERY\nSELECT'
   return prompt
 def GPT4_generation(prompt):
-  response = openai.ChatCompletion.create(
+  client = OpenAI(
+        api_key=API_KEY,
+        base_url=BASE_URL
+  )
+  response = client.chat.completions.create(
     model="gpt-4",
     messages=[{"role": "user", "content": prompt}],
     n = 1,
@@ -582,10 +585,15 @@ def GPT4_generation(prompt):
     presence_penalty=0.0,
     stop = ["Q:"]
   )
-  return response['choices'][0]['message']['content']
+  return response.choices[0].message.content
+
 
 def GPT4_debug(prompt):
-  response = openai.ChatCompletion.create(
+  client = OpenAI(
+        api_key=API_KEY,
+        base_url=BASE_URL
+  )
+  response = client.chat.completions.create(
     model="gpt-4",
     messages=[{"role": "user", "content": prompt}],
     n = 1,
@@ -597,7 +605,7 @@ def GPT4_debug(prompt):
     presence_penalty=0.0,
     stop = ["#", ";","\n\n"]
   )
-  return response['choices'][0]['message']['content']
+  return response.choices[0].message.content
 
 if __name__ == '__main__':
     spider_schema,spider_primary,spider_foreign = creatiing_schema(DATASET_SCHEMA)
@@ -614,7 +622,9 @@ if __name__ == '__main__':
             try:
                 schema_links = GPT4_generation(
                     schema_linking_prompt_maker(row['question'], row['db_id']))
-            except:
+            except Exception as e:
+                print(e)
+                print(f"api error, wait for 3 seconds and retry...")
                 time.sleep(3)
                 pass
         try:
